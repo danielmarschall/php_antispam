@@ -1,0 +1,84 @@
+ALAS-AntiSpam-Schutz
+
+Folgende Funktion soll euch helfen, E-Mail-Adressen per JavaScript-Ausgabe sicher darzustellen, sodass der Benutzer sie auch anklicken und verwenden kann. Das Script wird als sehr sicher eingestuft.
+
+[b]Code[/b]
+
+[code]<?php
+
+// PHP-AntiSpam-Funktion "secure_email", Version 3.02 of 2009-09-23
+// von Daniel Marschall [www.daniel-marschall.de]
+
+function secure_email($email, $linktext, $crypt_linktext)
+{
+	// No new lines to avoid a JavaScript error!
+	$linktext = str_replace("\r", ' ', $linktext);
+	$linktext = str_replace("\n", ' ', $linktext);
+
+	if (!function_exists('alas_js_crypt'))
+	{
+		function alas_js_crypt($text)
+		{
+			$tmp = '';
+			for ($i=0; $i<strlen($text); $i++)
+			{
+				$tmp .= 'document.write("&#'.ord(substr($text, $i, 1)).';");';
+			}
+			return $tmp;
+		}
+	}
+
+	if (!function_exists('alas_js_write'))
+	{
+		function alas_js_write($text)
+		{
+			$text = str_replace('\\', '\\\\', $text);
+			$text = str_replace('"', '\"', $text);
+			$text = str_replace('/', '\/', $text); // W3C Validation </a> -> <\/a>
+			return 'document.write("'.$text.'");';
+		}
+	}
+
+	$aus = '';
+	if ($email != '')
+	{
+		$aus .= '<script language="JavaScript" type="text/javascript"><!--'."\n";
+		$aus .= alas_js_write('<a href="');
+		$aus .= alas_js_crypt('mailto:'.$email);
+		$aus .= alas_js_write('">');
+		$aus .= $crypt_linktext ? alas_js_crypt($linktext) : alas_js_write($linktext);
+		$aus .= alas_js_write('</a>').'// --></script>';
+	}
+
+	return $aus;
+}
+
+?>[/code]
+
+[b]Beschreibung[/b]
+
+Jedes Zeichen wird einzeln mit dem Zeichen-Code in einer einzelnen Zeile geschrieben. Selbst mailto, @ und .de werden mitverschlüsselt. Folglich kann man den Mechanismus als sehr sicher einstufen.
+
+Der Benutzer muss JavaScript aktiviert haben, um die E-Mail-Adresse zu sehen. Die Verwendung von JavaScript ist aber Webseiten üblich und ist bei allen Browser standardmäßig aktiviert.
+
+Vorteilhaft ist, dass kein SpamBot diesen Mechanismus kennt, da dieser nicht häufig angewandt wird. Ich bitte daher, diesen Spamschutz nicht in große Systeme ohne Erlaubnis einzubauen, da bei zu starkem Bekanntheitsgrades der JavaScript-Struktur, die Spam-Bots dem Mechanismus entgegenwirken könnten.
+
+Auch ohne PHP ist der Spamschutz möglich, da der Code bereits im Vorraus berechnet und die Ausgabe in einer HTML-Datei eingebaut werden kann.
+
+[b]Benutzung[/b]
+
+1. Parameter: E-Mail-Adresse ohne Angabe von "mailto:"
+2. Parameter: Angabe des Linktextes oder des Linkbildes
+3. Parameter: Soll der 2. Parameter auch verschlüsselt werden? Nur ein Text darf verschlüsselt werden, ein Bild nicht! Der Linktext muss verschlüsselt werden, wenn er die E-Mail-Adresse enthält, da sonst der Schutz verfällt.
+
+[b]Beispiele[/b]
+
+[code]<?php
+
+echo secure_email('test@example.com', 'Schreib mir!', 0);
+echo secure_email('test@example.com', 'test@example.com', 1);
+echo secure_email('test@example.com', '<img src="...">', 0);
+
+?>[/code]
+
+Das Script ist Teil meiner ALAS-Kampagne und wird ViaThinkSoft-Weit inkl. Personal WebBase, dev.board und Partnerseiten verwendet.
