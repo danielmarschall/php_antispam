@@ -1,7 +1,8 @@
 <?php
 
-// PHP-AntiSpam-Funktion "secure_email", Version 3.05 of 2018-07-20
-// von Daniel Marschall [www.daniel-marschall.de]
+// PHP-AntiSpam-Funktion "secure_email", Version 3.06 of 2022-01-09
+// by Daniel Marschall [www.daniel-marschall.de], ViaThinkSoft
+// License: Apache 2.0 License
 
 if (!function_exists('alas_js_crypt'))
 {
@@ -27,7 +28,7 @@ if (!function_exists('alas_js_write'))
 	}
 }
 
-function secure_email($email, $linktext, $crypt_linktext)
+function secure_email($email, $linktext, $crypt_linktext, $css_class='')
 {
 	// No new lines to avoid a JavaScript error!
 	$linktext = str_replace("\r", ' ', $linktext);
@@ -37,7 +38,9 @@ function secure_email($email, $linktext, $crypt_linktext)
 	if ($email != '')
 	{
 		$aus .= '<script><!--'."\n"; // type="text/javascript" is not necessary in HTML5
-		$aus .= alas_js_write('<a href="');
+		$aus .= alas_js_write('<a ');
+		if ($css_class != '') $aus .= alas_js_write('class="'.$css_class.'" ');
+		$aus .= alas_js_write('href="');
 		$aus .= alas_js_crypt('mailto:'.$email);
 		$aus .= alas_js_write('">');
 		$aus .= $crypt_linktext ? alas_js_crypt($linktext) : alas_js_write($linktext);

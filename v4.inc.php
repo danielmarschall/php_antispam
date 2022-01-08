@@ -130,5 +130,3 @@ function secure_email_autodetect($email, $linktext) {
 function secure_email_identical_text($email) {
 	return secure_email_autodetect($email, $email);
 }
-
-?>
