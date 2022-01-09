@@ -4,79 +4,32 @@
 // for ViaThinkSoft Sigma as filter plugin (modified $content)
 // Use it for your website!
 
+include __DIR__ . '/../v3.inc.php'; // AntiSpam v3
+
 // CONFIGURATION
 
 define('CFG_MAKE_MAIL_ADDRESSES_CLICKABLE', true);
 
 // CODE
 
+function alas_js_crypt($text)
+{
+	$tmp = '';
+	for ($i=0; $i<strlen($text); $i++)
+	{
+		$tmp .= 'document.write("&#'.ord(substr($text, $i, 1)).';");';
+	}
+	return $tmp;
+}
+
 function secure_email_triv($email)
 {
-	if (!function_exists('alas_js_crypt'))
-	{
-		function alas_js_crypt($text)
-		{
-			$tmp = '';
-			for ($i=0; $i<strlen($text); $i++)
-			{
-				$tmp .= 'document.write("&#'.ord(substr($text, $i, 1)).';");';
-			}
-			return $tmp;
-		}
-	}
-
 	$aus = '';
 	if ($email != '')
 	{
 		$aus .= '<script language="JavaScript" type="text/javascript"><!--'."\n";
 		$aus .= alas_js_crypt($email);
 		$aus .= '// --></script>';
-	}
-	return $aus;
-}
-
-// PHP-AntiSpam-Funktion "secure_email", Version 3.02
-// von Daniel Marschall [www.daniel-marschall.de]
-
-function secure_email($email, $linktext, $crypt_linktext)
-{
-	// No new lines to avoid a JavaScript error!
-	$linktext = str_replace("\r", ' ', $linktext);
-	$linktext = str_replace("\n", ' ', $linktext);
-
-	if (!function_exists('alas_js_crypt'))
-	{
-		function alas_js_crypt($text)
-		{
-			$tmp = '';
-			for ($i=0; $i<strlen($text); $i++)
-			{
-				$tmp .= 'document.write("&#'.ord(substr($text, $i, 1)).';");';
-			}
-			return $tmp;
-		}
-	}
-
-	if (!function_exists('alas_js_write'))
-	{
-		function alas_js_write($text)
-		{
-			$text = str_replace('\\', '\\\\', $text);
-			$text = str_replace('"', '\"', $text);
-			$text = str_replace('/', '\/', $text); // W3C Validation </a> -> <\/a>
-			return 'document.write("'.$text.'");';
-		}
-	}
-
-	$aus = '';
-	if ($email != '')
-	{
-		$aus .= '<script language="JavaScript" type="text/javascript"><!--'."\n";
-		$aus .= alas_js_write('<a href="');
-		$aus .= alas_js_crypt('mailto:'.$email);
-		$aus .= alas_js_write('">');
-		$aus .= $crypt_linktext ? alas_js_crypt($linktext) : alas_js_write($linktext);
-		$aus .= alas_js_write('</a>').'// --></script>';
 	}
 	return $aus;
 }
@@ -111,21 +64,17 @@ function auto_secure_mail_addresses($content) {
 
 	// Step 1: Parse links and make them secure
 
-	if (!function_exists('link_cb_1')) {
-		function link_cb_1($a) {
+	$content = preg_replace_callback("/<a(.+?)mailto:($addr_spec)(.+?)>(.+?)<\/a>/sm", 
+		function($a) {
 			$mailaddr = $a[2];
 			$linktext = $a[14]; // Letztes
 
 			return secure_email($mailaddr, $linktext, is_valid_email_address($linktext));
-		}
-	}
-
-	$content = preg_replace_callback("/<a(.+?)mailto:($addr_spec)(.+?)>(.+?)<\/a>/sm", 'link_cb_1', $content); // TODO! Kann Greedy werden!
+		}, $content); // TODO! Kann Greedy werden!
 
 	// Step 2: Find all further mail addresses, make then clickable and prevent spam bots
 
-	if (!function_exists('link_cb_2')) {
-		function link_cb_2($a) {
+	$content = preg_replace_callback("/($addr_spec)/sm", function($a) {
 			$mailaddr = $a[1]; // Letztes
 
 			if (CFG_MAKE_MAIL_ADDRESSES_CLICKABLE) {
@@ -133,14 +82,13 @@ function auto_secure_mail_addresses($content) {
 			} else {
 				return secure_email_triv($mailaddr);
 			}
-		}
-	}
-
-	$content = preg_replace_callback("/($addr_spec)/sm", 'link_cb_2', $content);
+		}, $content);
 
 	// Output
 
 	return $content;
 }
 
-$content = auto_secure_mail_addresses($content);
+if (isset($content)) {
+	$content = auto_secure_mail_addresses($content);
+}

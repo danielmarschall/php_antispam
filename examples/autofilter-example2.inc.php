@@ -12,21 +12,18 @@ define('CFG_DEFAULT_CLASS', 'mail-addr');
 
 // SOURCE: SIGMA 3.0 ANTISPAM FILTER
 
+function alas_js_crypt($text)
+{
+	$tmp = '';
+	for ($i=0; $i<strlen($text); $i++)
+	{
+		$tmp .= 'document.write("&#'.ord(substr($text, $i, 1)).';");';
+	}
+	return $tmp;
+}
+
 function secure_email_triv($email)
 {
-	if (!function_exists('alas_js_crypt'))
-	{
-		function alas_js_crypt($text)
-		{
-			$tmp = '';
-			for ($i=0; $i<strlen($text); $i++)
-			{
-				$tmp .= 'document.write("&#'.ord(substr($text, $i, 1)).';");';
-			}
-			return $tmp;
-		}
-	}
-
 	$aus = '';
 	if ($email != '')
 	{
@@ -85,16 +82,6 @@ class MailLinkProtector extends UrlParseIterator {
 	}
 }
 
-function link_cb_2($a) {
-	$mailaddr = $a[1]; // Letztes
-
-	if (CFG_MAKE_MAIL_ADDRESSES_CLICKABLE) {
-		return secure_email($mailaddr, $mailaddr, true, CFG_DEFAULT_CLASS);
-	} else {
-		return secure_email_triv($mailaddr);
-	}
-}
-
 function protect_mail_address_urls($content, $correct_missing_mailto = true) {
 	$t = new MailLinkProtector;
 	$t->correct_missing_mailto = $correct_missing_mailto;
@@ -122,7 +109,15 @@ function auto_secure_mail_addresses($content) {
 	$exclude_mail_chars_beginning = '\^°!"§$%&/()=\?´`}\]\[{\+*~\'#-_\.:,;';
 	$exclude_mail_chars_ending = $exclude_mail_chars_beginning;
 
-	$content = preg_replace_callback("@(?![$exclude_mail_chars_beginning])($addr_spec)(?<![$exclude_mail_chars_ending])@sm", 'link_cb_2', $content);
+	$content = preg_replace_callback("@(?![$exclude_mail_chars_beginning])($addr_spec)(?<![$exclude_mail_chars_ending])@sm", function($a) {
+		$mailaddr = $a[1]; // Letztes
+
+		if (CFG_MAKE_MAIL_ADDRESSES_CLICKABLE) {
+			return secure_email($mailaddr, $mailaddr, true, CFG_DEFAULT_CLASS);
+		} else {
+			return secure_email_triv($mailaddr);
+		}
+	}, $content);
 
 	// Output
 

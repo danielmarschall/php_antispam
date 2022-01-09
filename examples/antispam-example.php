@@ -11,7 +11,7 @@
 
 <?php
 
-echo '<form action="'.$PHP_SELF.'">
+echo '<form action="'.$_SERVER['PHP_SELF'].'">
 	E-Mail-Adresse: <input name="email" value="'.$_GET['email'].'"><br>
 	Linktext: <input name="linktext" value="'.$_GET['linktext'].'"><br>
 	Linktext verschlüsseln: <input type="checkbox" name="crypt_linktext" checked><br>
