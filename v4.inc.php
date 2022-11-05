@@ -3,7 +3,7 @@
 /*
  * ViaThinkSoft Anti-Spam Script for PHP
  * (C) 2009-2022 ViaThinkSoft
- * Revision: 2022-01-09 (Version 4.1)
+ * Revision: 2022-11-05 (Version 4.1.1)
  * License: Apache 2.0 License
  */
 
@@ -19,7 +19,7 @@ class VtsAntiSpam4 {
 		// Anfagswert über aktuelle Mikrosekunde setzen
 		// http://de2.php.net/manual/de/function.srand.php
 		list($usec, $sec) = explode(' ', microtime());
-		$seed = (int)($sec + ((float)$usec * 100000));
+		$seed = (int)((int)$sec + ((float)$usec * 100000));
 		srand($seed);
 	}
 
